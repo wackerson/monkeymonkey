@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Genjustsu Fal — private video workflow</title>
+  <style>
+    :root{--ink:#172016;--paper:#f7f8f3;--line:#d9dfd4;--muted:#647064;--accent:#c9f23c;--card:#fff;--dark:#172018}*{box-sizing:border-box}body{margin:0;background:var(--paper);color:var(--ink);font:15px/1.5 system-ui,sans-serif}.shell{max-width:980px;margin:auto;padding:26px 22px 64px}header{display:flex;justify-content:space-between;gap:16px;border-bottom:1px solid var(--line);padding-bottom:18px}.brand{font-weight:900;letter-spacing:-.06em;font-size:22px}.eyebrow{font:11px ui-monospace,monospace;letter-spacing:.12em;color:#668000}.status{margin:23px 0;padding:13px 16px;border:1px solid var(--line);border-radius:9px;background:#eef2e9;color:var(--muted)}.status.error{border-color:#d5a8a8;background:#fff1f1;color:#8b3030}h1{font-size:clamp(38px,7vw,66px);line-height:.95;letter-spacing:-.08em;margin:44px 0 12px;max-width:740px}.intro{color:var(--muted);max-width:640px}.steps{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:30px 0}.steps a{color:var(--ink);text-decoration:none;background:var(--card);border:1px solid var(--line);border-radius:8px;padding:12px;font-size:12px}.steps b{color:#718c00}.panel{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:25px;margin:20px 0}.heading{display:flex;gap:12px;align-items:center}.number{font:11px ui-monospace,monospace;color:#647f00}.panel h2{margin:0;font-size:22px;letter-spacing:-.04em}.hint,p{color:var(--muted)}.hint{font-size:12px}.grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}.field{display:grid;gap:7px;font-size:13px;font-weight:700;margin-top:18px}input:not([type=file]),select,textarea{width:100%;padding:10px;border:1px solid var(--line);border-radius:7px;font:inherit;background:#fff}textarea{min-height:150px;resize:vertical}.upload{display:flex;align-items:center;gap:12px;border:1px dashed #aab7a4;border-radius:9px;padding:16px;margin-top:18px;position:relative;cursor:pointer}.upload input{position:absolute;inset:0;opacity:0;cursor:pointer}.upload small{display:block;color:var(--muted);margin-top:3px}.actions{display:flex;align-items:center;justify-content:space-between;gap:18px;flex-wrap:wrap;margin-top:20px}button{border:0;border-radius:7px;padding:12px 16px;background:var(--dark);color:#fff;font:700 13px inherit;cursor:pointer}button:disabled{opacity:.45;cursor:wait}.secondary{background:#edf1e9;color:var(--ink)}.viewer{background:#101510;border-radius:9px;overflow:hidden;margin-top:18px}video{display:block;width:100%;max-height:480px;background:#090c09}.tabs{display:flex;gap:7px;flex-wrap:wrap;margin-top:18px}.tabs button{background:#edf1e9;color:var(--ink);padding:8px 10px}.tabs button.active{background:var(--dark);color:var(--accent)}.viewer-foot{padding:10px 13px;color:#cbd4c7;font-size:12px;display:flex;justify-content:space-between;gap:10px}.viewer-foot a,a{color:#5d7800}.review{padding:16px;border:1px solid var(--line);border-radius:8px;margin-top:18px}.hidden{display:none!important}pre{white-space:pre-wrap;overflow-wrap:anywhere;padding:12px;background:#f2f5ed;font:12px/1.55 ui-monospace,monospace}.badge{font:11px ui-monospace,monospace;color:#516800}.empty{border:1px dashed var(--line);padding:28px;text-align:center;color:var(--muted);margin-top:18px}@media(max-width:620px){.shell{padding:18px 14px}.grid,.steps{grid-template-columns:1fr 1fr}.panel{padding:18px}.actions button{width:100%}}
+  </style>
+</head>
+<body><main class="shell">
+  <header><div class="brand">GENJUSTSU <span class="eyebrow">/ FAL</span></div><span class="eyebrow">private full workflow</span></header>
+  <h1>Depth-mask the scene. Replace the subject. Preserve the soundtrack.</h1>
+  <p class="intro">A private, draft-first video workflow: Demucs vocal isolation and +3 pitch shift, colored-depth generation, SAM 3 mask review, Fal Seedance, then restoration of the untouched source audio.</p>
+  <nav class="steps"><a href="#source"><b>01</b> Prepare</a><a href="#review"><b>02</b> Review</a><a href="#draft"><b>03</b> Draft</a><a href="#final"><b>04</b> 1080p</a></nav>
+  <div id="status" class="status" role="status">Choose a source video to begin.</div>
+
+  <section class="panel" id="source"><div class="heading"><span class="number">01</span><h2>Prepare source</h2></div>
+    <form id="prepare-form">
+      <label class="upload"><span>↑</span><span><strong>Source video</strong><small data-filename>MP4 or MOV · up to 30 seconds</small></span><input required name="video" type="file" accept="video/*"></label>
+      <div class="grid"><label class="field">Workflow mode<select name="mode"><option value="depth">Advanced · Depth + SAM 3</option><option value="face_mesh">Fast · Face mesh</option><option value="depth_mesh">Advanced · Depth + SAM + face mesh</option></select></label><label class="field">Subject to replace<input required name="prompt" value="person"></label></div>
+      <div class="actions"><span class="hint">Preparation uses Fal for Demucs, depth, and SAM 3. No Seedance generation is submitted here.</span><button id="prepare-button">Prepare video →</button></div>
+    </form>
+  </section>
+
+  <section class="panel" id="review"><div class="heading"><span class="number">02</span><h2>Review the complete prepared input</h2></div>
+    <p class="hint">Play every frame. Check coverage, hands, hair, clothing, background spill and flicker; for mesh modes, check tracking and alignment. Listen to the pitched-vocal input.</p>
+    <div id="input-empty" class="empty">Prepared video, mask, and depth previews will appear here.</div>
+    <div id="input-ready" class="hidden"><div id="tabs" class="tabs"></div><div class="viewer"><video id="input-video" controls playsinline></video><div class="viewer-foot"><span id="input-caption"></span><a id="input-download" download>Download ↓</a></div></div>
+      <div class="review"><strong>Required review gate</strong><p id="review-state" class="hint">Mask review required.</p><label class="hint"><input id="review-check" type="checkbox"> I reviewed the whole prepared clip and its current mask/mesh is correct.</label><div class="actions"><button id="approve-input" type="button" disabled>Approve input</button><button id="reject-input" class="secondary" type="button">Needs correction</button></div></div>
+    </div>
+  </section>
+
+  <section class="panel" id="draft"><div class="heading"><span class="number">03</span><h2>Create a Fal draft</h2></div>
+    <p class="hint">Fal receives the prepared video and visual references only after you submit. It uses the embedded pitched vocals as performance guidance; generated audio is discarded from the delivered result.</p>
+    <form id="draft-form"><div class="grid"><label class="upload"><span>↑</span><span><strong>Character reference</strong><small data-filename>Image or video · required</small></span><input required name="sirio" type="file" accept="image/png,image/jpeg,image/webp,video/mp4,video/quicktime,video/webm"></label><label class="upload"><span>↑</span><span><strong>Second image reference</strong><small data-filename>Optional</small></span><input name="tein" type="file" accept="image/png,image/jpeg,image/webp"></label></div>
+      <label class="field">Generation prompt<textarea required name="prompt">Replace the complete selected subject with the supplied character reference in every frame, including hair, hands, clothing and footwear. Preserve the original background, camera framing, lighting, motion and timing. Match the embedded speech exactly without extra dialogue. Use the embedded vocals in @Video1 for performance and lip synchronization.</textarea></label>
+      <div class="actions"><span class="hint">Drafts use Fal Seedance Fast at 720p by default.</span><button id="draft-button" disabled>Create paid draft →</button></div>
+    </form>
+  </section>
+
+  <section class="panel" id="final"><div class="heading"><span class="number">04</span><h2>Final result</h2></div>
+    <div id="final-empty" class="empty">Your finished draft appears here. The original source audio is restored after generation.</div>
+    <div id="final-ready" class="hidden"><div class="viewer"><video id="final-video" controls playsinline></video><div class="viewer-foot"><span id="quality-label" class="badge">DRAFT · ORIGINAL AUDIO</span><a id="final-download" download>Download ↓</a></div></div>
+      <div class="actions"><span class="hint">Fal does not support draft completion. This sends the exact approved inputs again as a new, paid 1080p request.</span><button id="upgrade-button">Approve & generate paid 1080p →</button></div><p id="upgrade-status" class="hint"></p>
+      <details><summary>Submitted prompt and request ID</summary><p id="generation-id" class="hint"></p><pre id="sent-prompt"></pre></details>
+    </div>
+  </section>
+</main>
+<script>
+const $=s=>document.querySelector(s);let id=new URLSearchParams(location.search).get('job'),approved=false,fingerprint='',busy=false,timer;
+const base=()=>'/runs/'+id+'/'; const say=(text,error=false)=>{$('#status').textContent=text;$('#status').classList.toggle('error',error)};
+async function api(url,opts){const r=await fetch(url,opts);const j=await r.json();if(!r.ok)throw Error(j.detail||j.error||'Request failed.');return j}
+async function has(file){return (await fetch(base()+file,{method:'HEAD',cache:'no-store'})).ok}
+for(const input of document.querySelectorAll('input[type=file]')) input.onchange=()=>{const file=input.files[0];if(file)input.closest('.upload').querySelector('[data-filename]').textContent=file.name};
+async function refresh(){
+ if(!id)return;const previews=[['Prepared input','seedance-input.mp4','Colored depth/mesh input with +3 pitched vocals'],['Mask','mask.mp4','SAM 3 subject mask'],['Depth','depth.mp4','Exact generated depth colors'],['Original','original.mp4','Normalized original']];
+ const present=await Promise.all(previews.map(x=>has(x[1])));$('#tabs').replaceChildren();
+ previews.forEach((x,n)=>{if(!present[n])return;const b=document.createElement('button');b.type='button';b.textContent=x[0];b.onclick=()=>{document.querySelectorAll('#tabs button').forEach(e=>e.classList.remove('active'));b.classList.add('active');$('#input-video').src=base()+x[1];$('#input-caption').textContent=x[2];$('#input-download').href=base()+x[1]};$('#tabs').append(b)});
+ if(present.some(Boolean)){$('#input-empty').classList.add('hidden');$('#input-ready').classList.remove('hidden');$('#tabs button').click()}
+ const review=await api('/jobs/'+id+'/mask-review');approved=review.approved;fingerprint=review.fingerprint||'';$('#review-state').textContent=review.note||review.status;$('#review-check').checked=approved;$('#approve-input').disabled=true;$('#draft-button').disabled=!present[0]||!approved||busy;
+ const draft=await has('final-preview.mp4'),hd=await has('hd/final-preview.mp4');if(draft||hd){const path=hd?'hd/final-preview.mp4':'final-preview.mp4';$('#final-empty').classList.add('hidden');$('#final-ready').classList.remove('hidden');$('#final-video').src=base()+path;$('#final-download').href=base()+path;$('#quality-label').textContent=hd?'1080P · ORIGINAL AUDIO':'DRAFT · ORIGINAL AUDIO';$('#upgrade-button').disabled=hd||busy}
+ if(await has('generation.json')){const g=await api(base()+'generation.json');$('#generation-id').textContent=(g.provider||'Fal')+' · '+g.request_id;$('#sent-prompt').textContent=g.prompt}
+}
+async function watch(){clearTimeout(timer);try{const job=await api('/jobs/'+id);busy=job.state==='running';say(job.status,job.state==='error');if(busy){timer=setTimeout(watch,3500)}else await refresh()}catch(e){say(e.message,true)}}
+$('#prepare-form').onsubmit=async e=>{e.preventDefault();try{say('Uploading and preparing video…');const job=await api('/jobs',{method:'POST',body:new FormData(e.target)});location.href='/?job='+job.id}catch(err){say(err.message,true)}};
+$('#review-check').onchange=()=>{$('#approve-input').disabled=!$('#review-check').checked};
+async function recordReview(value){try{const data=new FormData();data.set('approved',value);data.set('fingerprint',fingerprint);data.set('note',value?'Prepared input approved after full-clip visual review.':'Prepared input needs correction; generation remains blocked.');await api('/jobs/'+id+'/mask-review',{method:'POST',body:data});await refresh()}catch(e){say(e.message,true)}}
+$('#approve-input').onclick=()=>recordReview(true);$('#reject-input').onclick=()=>recordReview(false);
+$('#draft-form').onsubmit=async e=>{e.preventDefault();if(!approved)return say('Approve the current mask/mesh first.',true);try{$('#draft-button').disabled=true;say('Uploading references and submitting Fal Seedance draft…');await api('/jobs/'+id+'/seedance',{method:'POST',body:new FormData(e.target)});await watch()}catch(err){say(err.message,true);$('#draft-button').disabled=false}};
+$('#upgrade-button').onclick=async()=>{try{$('#upgrade-button').disabled=true;$('#upgrade-status').textContent='Submitting approved 1080p Fal request…';await api('/jobs/'+id+'/hd',{method:'POST'});pollHD()}catch(e){$('#upgrade-status').textContent=e.message;$('#upgrade-button').disabled=false}};
+async function pollHD(){try{const h=await api('/jobs/'+id+'/hd');$('#upgrade-status').textContent=h.status;if(h.state==='running')setTimeout(pollHD,4000);else await refresh()}catch(e){$('#upgrade-status').textContent=e.message}}
+if(id)refresh().then(watch).catch(e=>say(e.message,true));
+</script></body></html>

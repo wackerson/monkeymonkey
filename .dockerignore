@@ -1,0 +1,8 @@
+.env
+.venv
+.venv-face
+node_modules
+runs
+__pycache__
+*.pyc
+.git
