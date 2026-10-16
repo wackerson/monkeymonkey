@@ -29,7 +29,9 @@ def separate(src,folder,status=print):
     status('Audio · uploading source stem to Fal')
     audio_url=upload(folder/'original-audio.wav')
     status('Audio · Fal Demucs separating vocals and original music')
-    data,request_id=run('fal-ai/demucs',{'audio_url':audio_url,'model':'htdemucs','output_format':'wav'},folder,'demucs',status)
+    # Fal otherwise requests every possible Demucs stem, including guitar and
+    # piano, which are unavailable on the faster htdemucs variant.
+    data,request_id=run('fal-ai/demucs',{'audio_url':audio_url,'model':'htdemucs','stems':['vocals','drums','bass','other'],'output_format':'wav'},folder,'demucs',status)
     stems={}
     for name,value in data.items():
         if not value:continue
