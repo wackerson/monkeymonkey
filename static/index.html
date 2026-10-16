@@ -16,7 +16,7 @@
 
   <section class="panel" id="source"><div class="heading"><span class="number">01</span><h2>Prepare source</h2></div>
     <form id="prepare-form">
-      <label class="upload"><span>↑</span><span><strong>Source video</strong><small data-filename>MP4 or MOV · up to 30 seconds</small></span><input required name="video" type="file" accept="video/*"></label>
+      <label class="upload"><span>↑</span><span><strong>Source video</strong><small data-filename>MP4 or MOV · 2–15 seconds</small></span><input required name="video" type="file" accept="video/*"></label>
       <div class="grid"><label class="field">Workflow mode<select name="mode"><option value="depth">Advanced · Depth + SAM 3</option><option value="face_mesh">Fast · Face mesh</option><option value="depth_mesh">Advanced · Depth + SAM + face mesh</option></select></label><label class="field">Subject to replace<input required name="prompt" value="person"></label></div>
       <div class="actions"><span class="hint">Preparation uses Fal for Demucs, depth, and SAM 3. No Seedance generation is submitted here.</span><button id="prepare-button">Prepare video →</button></div>
     </form>

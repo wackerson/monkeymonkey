@@ -1,8 +1,11 @@
 """Isolate vocals before generation and replace generated sound with entire original source audio."""
 from pathlib import Path
 import json
-import av,numpy as np,requests
+import av,numpy as np,requests,shutil,subprocess
 RATE=44100
+SEEDANCE_REFERENCE_WIDTH=720
+SEEDANCE_REFERENCE_HEIGHT=1080
+SEEDANCE_MAX_VIDEO_BYTES=50*1024*1024
 
 def read_audio(path):
     parts=[];res=av.AudioResampler(format='fltp',layout='stereo',rate=RATE)
@@ -80,9 +83,57 @@ def finish_preview(generated,folder,target=None):
             if p.dts is not None:p.stream=astream;out.mux(p)
     return target
 
+def prepare_seedance_reference(source, folder):
+    """Make a conservative Seedance-compatible MP4 without altering the edit.
+
+    Fal accepts MP4/MOV references only within a narrow resolution and duration
+    range.  The preprocessing workflow formerly sent its 540x960 portrait
+    intermediate directly, which Fal can reject.  This retains every source
+    pixel by fitting it inside a 720x1080 H.264 frame; pillarbox padding is
+    intentional and avoids cropping the source camera motion.
+    """
+    source=Path(source);folder=Path(folder)
+    with av.open(str(source)) as inp:
+        stream=inp.streams.video[0]
+        duration=float(inp.duration/av.time_base)
+        if not 2<=duration<=15:
+            raise ValueError(f'Seedance accepts a 2–15 second reference video; this prepared clip is {duration:.1f} seconds. Use a 2–15 second source clip.')
+        if not inp.streams.audio:
+            raise ValueError('The prepared Seedance reference has no audio track.')
+    ffmpeg=shutil.which('ffmpeg')
+    if not ffmpeg:
+        raise RuntimeError('FFmpeg is required to prepare a Seedance-compatible reference video.')
+    target=folder/'seedance-reference.mp4'
+    filter_graph=(
+        f'scale={SEEDANCE_REFERENCE_WIDTH}:{SEEDANCE_REFERENCE_HEIGHT}:force_original_aspect_ratio=decrease,'
+        f'pad={SEEDANCE_REFERENCE_WIDTH}:{SEEDANCE_REFERENCE_HEIGHT}:(ow-iw)/2:(oh-ih)/2:color=black,setsar=1,fps=24'
+    )
+    command=[
+        ffmpeg,'-y','-i',str(source),'-map','0:v:0','-map','0:a:0?',
+        '-vf',filter_graph,'-c:v','libx264','-pix_fmt','yuv420p','-profile:v','high',
+        '-crf','20','-maxrate','6M','-bufsize','12M','-preset','fast',
+        '-c:a','aac','-b:a','192k','-movflags','+faststart',str(target),
+    ]
+    completed=subprocess.run(command,capture_output=True,text=True)
+    if completed.returncode:
+        raise RuntimeError('Could not encode a Seedance-compatible reference video: '+completed.stderr[-1000:])
+    if target.stat().st_size>SEEDANCE_MAX_VIDEO_BYTES:
+        raise ValueError('Prepared Seedance reference exceeds Fal\'s 50 MB video-input limit. Use a shorter or less detailed source clip.')
+    with av.open(str(target)) as output:
+        video=output.streams.video[0]
+        encoded_duration=float(output.duration/av.time_base)
+        codec=video.codec_context.name
+        if (video.width,video.height)!=(SEEDANCE_REFERENCE_WIDTH,SEEDANCE_REFERENCE_HEIGHT) or codec!='h264' or not 2<=encoded_duration<=15:
+            raise RuntimeError('Seedance reference validation failed after encoding; no Fal request was submitted.')
+    (folder/'seedance-reference.json').write_text(json.dumps({
+        'source':source.name,'file':target.name,'width':SEEDANCE_REFERENCE_WIDTH,
+        'height':SEEDANCE_REFERENCE_HEIGHT,'duration_seconds':round(encoded_duration,3),
+        'codec':'h264','size_bytes':target.stat().st_size,
+    },indent=2))
+    return target
+
 def prepare_seedance_video(folder, semitones=3):
     """Embed +3-semitone isolated vocals into the colored-depth composite."""
-    import subprocess,shutil
     folder=Path(folder);binary=shutil.which('rubberband')
     if not binary:raise RuntimeError('Rubber Band is required for pitch shifting.')
     pitched=folder/f'vocals-plus{semitones}.wav'

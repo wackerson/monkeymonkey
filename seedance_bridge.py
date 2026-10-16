@@ -9,7 +9,7 @@ import time
 import av
 import requests
 
-from audio_workflow import finish_preview, prepare_seedance_video
+from audio_workflow import finish_preview, prepare_seedance_reference, prepare_seedance_video
 from config import ROOT, credential, setting
 
 FAST_MODEL = "bytedance/seedance-2.0/fast/reference-to-video"
@@ -78,7 +78,9 @@ def submit(folder, prompt, sirio, tein=None, status=print):
     if not (folder / "audio-manifest.json").exists():
         raise ValueError("Audio separation must complete before submission.")
     status("Pitching isolated vocals +3 semitones and embedding in colored-depth video")
-    prepared = folder / "seedance-input.mp4" if is_mesh(folder) else prepare_seedance_video(folder)
+    input_video = folder / "seedance-input.mp4" if is_mesh(folder) else prepare_seedance_video(folder)
+    status("Validating and encoding a Seedance-compatible reference video")
+    prepared = prepare_seedance_reference(input_video, folder)
     status("Uploading prepared input and character references to Fal")
     with concurrent.futures.ThreadPoolExecutor(max_workers=3) as pool:
         urls = list(pool.map(lambda path: _upload(path)[0], [prepared, sirio] + ([tein] if tein else [])))

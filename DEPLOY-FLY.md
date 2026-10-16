@@ -43,7 +43,7 @@ Use the deployed URL, enter `APP_ACCESS_TOKEN`, and then use the workflow normal
 
 ## Test deployment checklist
 
-- Use a short non-sensitive clip first (the app permits up to 30 seconds).
+- Use a short non-sensitive 2–15 second clip first. Seedance accepts reference videos in that duration range; the app validates and re-encodes the prepared input to H.264 720×1080 before upload.
 - Confirm the `/health` check is passing before uploading a clip.
 - Keep the single Machine running while a job is working. The deployment deliberately disables auto-stop because background preparation and Fal polling run inside that Machine.
 - Do not run a second Machine: the job queue is in memory and the Fly Volume is attached to one Machine.
