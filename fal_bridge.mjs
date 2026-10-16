@@ -21,6 +21,13 @@ async function upload(paths) {
   }));
 }
 
+function describeError(error) {
+  const message = error?.message || String(error);
+  const detail = error?.body ? JSON.stringify(error.body) : "";
+  const requestId = error?.requestId ? ` (Fal request ${error.requestId})` : "";
+  return detail ? `${message}${requestId}: ${detail}` : `${message}${requestId}`;
+}
+
 try {
   configure();
   const action = process.argv[2];
@@ -37,6 +44,6 @@ try {
   } else throw new Error(`Unknown Fal bridge action: ${action}`);
   process.stdout.write(JSON.stringify(result));
 } catch (error) {
-  process.stderr.write(error?.message || String(error));
+  process.stderr.write(describeError(error));
   process.exitCode = 1;
 }

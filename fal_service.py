@@ -54,7 +54,18 @@ def run(model, input_data, folder, artifact, status=print):
         current = _bridge("status", {"model": model, "request_id": request_id})
         state = str(current.get("status", "")).upper()
         if state in {"COMPLETED", "SUCCEEDED"}:
-            result = _bridge("result", {"model": model, "request_id": request_id})
+            # Fal may report COMPLETED just before the queue result endpoint is
+            # readable. Retry that short propagation window without re-submitting.
+            result = None
+            for attempt in range(12):
+                try:
+                    result = _bridge("result", {"model": model, "request_id": request_id})
+                    break
+                except RuntimeError as error:
+                    if "Unprocessable Entity" not in str(error) or attempt == 11:
+                        raise RuntimeError(f"Fal {artifact} result fetch failed for {model} request {request_id}: {error}") from error
+                    status(f"Fal {artifact} completed; result is propagating ({attempt + 1}/12)")
+                    time.sleep(5)
             response_path.write_text(json.dumps(result, indent=2))
             return result.get("data", result), request_id
         if state in {"FAILED", "ERROR", "CANCELLED", "CANCELED"}:
